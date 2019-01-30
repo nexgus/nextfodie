@@ -45,12 +45,12 @@ static const char device_message[] = "Specify the target device to infer on (def
 static const char model_message[] = "Path to an .xml file with a trained model";
 static const char threshold_message[] = "Threshold for inference score/probability (default: 0.5)";
 
-DEFINE_bool  (h, false,     help_message);
-DEFINE_string(H, "0.0.0.0", host_message);
-DEFINE_int32 (p, 30303,     port_message);
-DEFINE_string(d, "CPU",     device_message);
-DEFINE_string(m, "",        model_message);
-DEFINE_double(t, 0.7,       threshold_message);
+DEFINE_bool  (h, false,       help_message);
+DEFINE_string(H, "localhost", host_message);
+DEFINE_int32 (p, 30303,       port_message);
+DEFINE_string(d, "CPU",       device_message);
+DEFINE_string(m, "",          model_message);
+DEFINE_double(t, 0.7,         threshold_message);
 
 static void show_usage() {
     std::cout << std::endl;
