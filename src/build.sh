@@ -52,10 +52,10 @@ if ! command -v cmake &>/dev/null; then
     exit 1
 fi
 
-build_dir=$HOME/restie/build
+build_dir=$SAMPLES_PATH/build
 mkdir -p $build_dir
 cd $build_dir
 cmake -DCMAKE_BUILD_TYPE=Release $SAMPLES_PATH
 make -j8
 
-printf "\nBuild completed, you can find binaries for all samples in the $HOME/restie/build/intel64/Release subfolder.\n\n"
+printf "\nBuild completed, you can find binaries for all samples in the $build_dir/intel64/Release subfolder.\n\n"

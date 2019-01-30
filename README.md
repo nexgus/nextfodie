@@ -43,7 +43,7 @@ Build it!
 
 ``` bash
 $ cd nextfodie/src
-$ ./build.sh
+$ bash build.sh
 ```
 
 Find the generated binary in this folder.
