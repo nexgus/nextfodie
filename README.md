@@ -18,7 +18,7 @@ For detail usage, please check [source code](https://github.com/nexgus/nextfodie
 ### Install Intel OpenVINO
 For detailed steps to install OpenVINO, follow [Install the Intel Distribution of OpenVINO toolkit for Linux](https://software.intel.com/en-us/articles/OpenVINO-Install-Linux).
 
-### Install Microsoft C++ RESR SDK
+### Install Microsoft C++ REST SDK
 For detailed steps to install cpprestsdk, please follow [here](https://github.com/Microsoft/cpprestsdk) or [apt-get](https://launchpad.net/ubuntu/+source/casablanca/2.8.0-2build2) on Debian/Ubuntu
 
 ``` bash
