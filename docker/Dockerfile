@@ -1,0 +1,34 @@
+FROM ubuntu:16.04
+RUN apt-get update && apt-get -y upgrade && apt-get autoremove
+RUN apt-get install -y --no-install-recommends \
+   build-essential \
+   cmake \
+   cpio \
+   curl \
+   git \
+   lsb-release \
+   pciutils \
+   python3.5 \
+   python3-pip \
+   python3-setuptools \
+   sudo \
+   libcpprest-dev
+RUN mkdir /app
+WORKDIR /app
+RUN curl \
+    http://registrationcenter-download.intel.com/akdlm/irc_nas/15013/l_openvino_toolkit_p_2018.5.445.tgz \
+    --output openvino.tgz
+RUN tar xzf openvino.tgz
+ARG INSTALL_DIR=/opt/intel/computer_vision_sdk
+# installing OpenVINO dependencies
+RUN cd /app/l_openvino_toolkit* && \
+    ./install_cv_sdk_dependencies.sh
+RUN cd /app/l_openvino_toolkit* && \
+    sed -i 's/decline/accept/g' silent.cfg && \
+    ./install.sh --silent silent.cfg
+RUN /bin/bash -c "source $INSTALL_DIR/bin/setupvars.sh"
+RUN echo "source $INSTALL_DIR/bin/setupvars.sh" >> /root/.bashrc
+WORKDIR /root
+RUN git clone https://github.com/nexgus/nextfodie.git
+RUN rm -r /app
+CMD ["/bin/bash"]
