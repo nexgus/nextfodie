@@ -1,5 +1,5 @@
-# Welcome!
-This is a RESTful API server to perform inference based on Intel OpenVINO 2018 R5.
+# Introduction
+This is a RESTful API server to perform inference based on Intel OpenVINO 2018 R5. The model is trained by TensorFlow Object Detection API, then use Model Optimizer of OpenVINO to convert to IR format.
 
 ## API
 ```
