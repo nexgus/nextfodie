@@ -1,4 +1,6 @@
-# Introduction
+# nextfodie
+
+## Introduction
 This is a RESTful API server to perform inference based on Intel OpenVINO 2018 R5. The model is trained by TensorFlow Object Detection API, then use Model Optimizer of OpenVINO to convert to IR format.
 
 ## API
@@ -28,19 +30,16 @@ $ sudo apt-get install libcpprest-dev
 ## Build nextfodie
 
 Clone this repository.
-
 ``` bash
 $ git clone https://github.com/nexgus/nextfodie.git
 ```
 
 Make sure the [CMake](https://cmake.org/) is istalled. To build nextfodie, the minimum version should be 2.8. Use this command to install the latest CMake on Ubuntu.
-
 ``` bash
 $ sudo apt-get install cmake
 ```
 
 Build it!
-
 ``` bash
 $ cd nextfodie/src
 $ bash build.sh
@@ -49,4 +48,11 @@ $ bash build.sh
 Find the generated binary in this folder.
 ```
 nextfodie/build/intel64/Release
+```
+
+## Build in Docker
+```
+$ cd nextfodie/docker
+$ docker build -t nextfodie .
+$ docker run --name nextfodie -it -p 30303:30303 nextfodie
 ```
