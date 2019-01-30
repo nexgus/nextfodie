@@ -52,7 +52,7 @@ if ! command -v cmake &>/dev/null; then
     exit 1
 fi
 
-build_dir=$SAMPLES_PATH/build
+build_dir=$SAMPLES_PATH/../build
 mkdir -p $build_dir
 cd $build_dir
 cmake -DCMAKE_BUILD_TYPE=Release $SAMPLES_PATH
