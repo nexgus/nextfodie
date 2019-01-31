@@ -23,8 +23,10 @@
  *
  *******************************************************************************
  */
+#include <cstdlib>          // std::getenv
 #include <memory>
 #include <stdexcept>
+//#include <sys/utsname.h>
 
 #include <ext_list.hpp>     // InferenceEngine::Extensions::Cpu::CpuExtensions
 
@@ -44,10 +46,12 @@ void display_intel_ie_version() {
               << " (Build " << (char*)ver->buildNumber << ")" << std::endl;
 }
 
-ObjectDetection::ObjectDetection(std::string &device) {
-    this->plugin = PluginDispatcher({"../../../lib/intel64", ""}).getPluginByDevice(device);
+ObjectDetection::ObjectDetection(std::string &app_path, std::string &device) {
+    this->plugin = PluginDispatcher({this->findPluginPath(), ""}).getPluginByDevice(device);
     if (device.find("CPU") != std::string::npos) {
-        this->plugin.AddExtension(std::make_shared<Extensions::Cpu::CpuExtensions>());
+        auto ext_path = app_path + "lib/libcpu_extension.so";
+        IExtensionPtr extension_ptr = make_so_pointer<IExtension>(ext_path);
+        this->plugin.AddExtension(extension_ptr);
     }
 
     this->input_w  = 0;
@@ -56,15 +60,23 @@ ObjectDetection::ObjectDetection(std::string &device) {
     this->setThreshold(0.5);
 }
 
-ObjectDetection::ObjectDetection(std::string &device, std::string &model_xml, float threshold) {
-    this->plugin = PluginDispatcher({"../../../lib/intel64", ""}).getPluginByDevice(device);
+ObjectDetection::ObjectDetection(std::string &app_path, std::string &device, std::string &model_xml, float threshold) {
+    this->plugin = PluginDispatcher({this->findPluginPath(), ""}).getPluginByDevice(device);
     if (device.find("CPU") != std::string::npos) {
-        this->plugin.AddExtension(std::make_shared<Extensions::Cpu::CpuExtensions>());
+        auto ext_path = app_path + "lib/libcpu_extension.so";
+        IExtensionPtr extension_ptr = make_so_pointer<IExtension>(ext_path);
+        this->plugin.AddExtension(extension_ptr);
     }
 
     std::string model_bin = model_bin_filename(model_xml);
     this->loadModel(model_xml, model_bin);
     this->setThreshold(threshold);
+}
+
+std::string ObjectDetection::findPluginPath() {
+    std::string intel_cvsdk_dir = std::string(std::getenv("INTEL_CVSDK_DIR"));
+    std::string plugin_path = intel_cvsdk_dir + "deployment_tools/inference_engine/lib/intel64";
+    return plugin_path;
 }
 
 std::string ObjectDetection::validateNetwork(CNNNetReader &reader) {

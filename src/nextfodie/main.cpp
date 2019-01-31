@@ -23,9 +23,11 @@
  *
  *******************************************************************************
  */
+#include <cstdlib>
 #include <exception>
 #include <iostream>
 #include <string>
+#include <sys/stat.h>
 
 #include <cpprest/http_listener.h>
 #include <gflags/gflags.h>
@@ -86,18 +88,49 @@ static bool parse_cli(int argc, char *argv[]) {
     return true;
 }
 
+static std::string& find_application_path(char *argv[]) {
+    static std::string app_path;
+    std::string command = std::string(argv[0]);
+    size_t pos = command.rfind('/');
+    if (pos == std::string::npos) {
+        std::string paths = std::string(std::getenv("PATH"));
+        size_t start_pos = 0;
+        struct stat buffer;
+        while (true) {
+            std::string path;
+            pos = paths.find(':');
+            if (pos == std::string::npos) {
+                app_path = paths.substr(start_pos);
+            }
+            else {
+                app_path = paths.substr(start_pos, pos);
+                start_pos = pos + 2;
+            }
+            auto filepath = app_path + '/' + command;
+            if (stat(filepath.c_str(), &buffer) == 0) {
+                break;
+            }
+        }
+    }
+    else {
+        app_path = command.substr(0, pos+1);
+    }
+    return app_path;
+}
+
 int main(int argc, char *argv[]) {
     if (!parse_cli(argc, argv)) {
         return 0;
     }
 
+    auto app_path = find_application_path(argv);
     if (FLAGS_m.size() > 0) {
         std::cout << "Loading model...";
-        ie = new NexIE::ObjectDetection(FLAGS_d, FLAGS_m);
+        ie = new NexIE::ObjectDetection(app_path, FLAGS_d, FLAGS_m);
         std::cout << " done" << std::endl;
     }
     else {
-        ie = new NexIE::ObjectDetection(FLAGS_d);
+        ie = new NexIE::ObjectDetection(app_path, FLAGS_d);
     }
     ie->setThreshold(FLAGS_t);
 

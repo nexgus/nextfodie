@@ -58,10 +58,11 @@ private:
     int max_output_count;
 
     std::string validateNetwork(CNNNetReader &reader);
+    std::string findPluginPath();
 
 public:
-    ObjectDetection(std::string &device);
-    ObjectDetection(std::string &device, std::string &model_xml, float threshold=0.5);
+    ObjectDetection(std::string &app_path, std::string &device);
+    ObjectDetection(std::string &app_path, std::string &device, std::string &model_xml, float threshold=0.5);
 
     void loadModel(std::string &model_xml, std::string &model_bin);
     void setThreshold(float threshold) {this->threshold = threshold;};

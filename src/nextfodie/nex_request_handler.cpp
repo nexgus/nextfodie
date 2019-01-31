@@ -24,10 +24,12 @@
  *******************************************************************************
  */
 #include <algorithm>
+#include <chrono>
 #include <exception>
 #include <iostream>
 #include <limits>
 #include <map>
+#include <ostream>
 #include <sstream>
 #include <string>
 
@@ -43,6 +45,8 @@ using namespace web;
 namespace NexIE = NexInferenceEngine;
 
 extern NexIE::ObjectDetection *ie;
+
+typedef std::chrono::duration<double, std::ratio<1, 1000>> ms;
 
 void handle_get(http_request request) {
     http::status_code status = status_codes::OK;
@@ -94,15 +98,26 @@ void handle_get(http_request request) {
                     jsn["error"] = json::value::string("Bad Request (unknown query)");
                 }
                 else {
-                    std::cout << "Inference request" << std::endl;
-                    std::cout << "    image: " << imgpath << std::endl;
-                    std::cout << "    threshold: " << threshold << std::endl;
-                    std::cout << "    abs: " << abs << std::endl;
+                    std::cout << "Inference request (image: " << imgpath << "; threshold: " << threshold 
+                              << "; normalized: " << !abs << ")" << std::endl;
 
+                    std::cout << "Infering..." << std::flush;
+                    auto t0 = std::chrono::high_resolution_clock::now();
                     auto img = ie->openImage(imgpath);
+                    auto t1 = std::chrono::high_resolution_clock::now();
                     auto inference = ie->infer(img);
+                    auto t2 = std::chrono::high_resolution_clock::now();
                     jsn = ie->parse(inference, !abs, threshold);
+                    auto t3 = std::chrono::high_resolution_clock::now();
                     status = status_codes::OK;
+
+                    ms t_load  = std::chrono::duration_cast<ms>(t1 - t0);
+                    ms t_infer = std::chrono::duration_cast<ms>(t2 - t1);
+                    ms t_parse = std::chrono::duration_cast<ms>(t3 - t2);
+                    ms t_total = std::chrono::duration_cast<ms>(t3 - t0);
+                    std::cout << " done (load: " << t_load.count() << "mS; infer: " << t_infer.count() 
+                              << "mS; parse: " << t_parse.count() << "mS; total: " << t_total.count() 
+                              << "mS)" << std::endl;
                 }
             }
         }
@@ -188,15 +203,26 @@ void handle_post(http_request request) {
                         jsn["error"] = json::value::string("Cannot find image");
                     }
                     else {
-                        std::cout << "Inference request" << std::endl;
-                        std::cout << "    image size: " << img_size << std::endl;
-                        std::cout << "    threshold:  " << threshold << std::endl;
-                        std::cout << "    abs:        " << abs << std::endl;
+                        std::cout << "Inference request (image size: " << img_size << "; threshold: " << threshold 
+                                  << "; normalized: " << !abs << ")" << std::endl;
 
+                        std::cout << "Infering..." << std::flush;
+                        auto t0 = std::chrono::high_resolution_clock::now();
                         auto cvimg = ie->openImage(img, (size_t)img_size);
+                        auto t1 = std::chrono::high_resolution_clock::now();
                         auto inference = ie->infer(cvimg);
+                        auto t2 = std::chrono::high_resolution_clock::now();
                         jsn = ie->parse(inference, !abs, threshold);
+                        auto t3 = std::chrono::high_resolution_clock::now();
                         status = status_codes::OK;
+
+                        ms t_load  = std::chrono::duration_cast<ms>(t1 - t0);
+                        ms t_infer = std::chrono::duration_cast<ms>(t2 - t1);
+                        ms t_parse = std::chrono::duration_cast<ms>(t3 - t2);
+                        ms t_total = std::chrono::duration_cast<ms>(t3 - t0);
+                        std::cout << " done (load: " << t_load.count() << "mS; infer: " << t_infer.count() 
+                                  << "mS; parse: " << t_parse.count() << "mS; total: " << t_total.count() 
+                                  << "mS)" << std::endl;
                     }
                 }
             }
@@ -294,12 +320,12 @@ void handle_put(http_request request) {
                         jsn["error"] = json::value::string("Cannot find model");
                     }
                     else {
-                        std::cout << "Load model" << std::endl;
-                        std::cout << "    xml_size: " << xml_size << std::endl;
-                        std::cout << "    bin_size: " << bin_size << std::endl;
+                        std::cout << "Load model request (xml: " << xml_size << "; bin: " << bin_size << ")" << std::endl;
+
+                        auto t0 = std::chrono::high_resolution_clock::now();
 
                         // Since OpenVINO cannot load model by file pointer or buffer, so we have to save it as a file
-                        std::cout << "Saving model files...";
+                        std::cout << "Loading..." << std::flush;
                         std::ofstream fp;
                         std::string filename_xml = "model.xml";
                         std::string filename_bin = "model.bin";
@@ -309,18 +335,16 @@ void handle_put(http_request request) {
                         fp.open(filename_bin, std::ofstream::binary);
                         fp.write(model_bin, bin_size);
                         fp.close();
-                        std::cout << " done" << std::endl;
 
                         // Load model
-                        std::cout << "Loading model...";
                         ie->loadModel(filename_xml, filename_bin);
-                        std::cout << " done" << std::endl;
 
-                        // Remove temp files
-                        std::cout << "Erasing saved model files...";
                         remove(filename_xml.c_str());
                         remove(filename_bin.c_str());
-                        std::cout << " done" << std::endl;
+
+                        auto t1 = std::chrono::high_resolution_clock::now();
+                        ms t = std::chrono::duration_cast<ms>(t1 - t0);
+                        std::cout << " done (" << t.count() << "mS)" << std::endl;
 
                         status = status_codes::OK;
                         jsn["xml"] = json::value::number(xml_size);
