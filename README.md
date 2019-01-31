@@ -51,8 +51,17 @@ nextfodie/build/intel64/Release
 ```
 
 ## Build in Docker
-```
+
+For Ubuntu 16.04
+``` bash
 $ cd nextfodie/docker
-$ docker build -t nextfodie .
+$ docker build -t nextfodie -f Dockerfile.16.04 .
+$ docker run --name nextfodie -it -p 30303:30303 nextfodie
+```
+
+For Ubuntu 18.04
+``` bash
+$ cd nextfodie/docker
+$ docker build -t nextfodie -f Dockerfile.18.04 .
 $ docker run --name nextfodie -it -p 30303:30303 nextfodie
 ```
