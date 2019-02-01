@@ -15,8 +15,8 @@ RUN apt-get install -y --no-install-recommends \
    libcpprest-dev
 RUN mkdir /app
 WORKDIR /app
-RUN curl \
-    http://registrationcenter-download.intel.com/akdlm/irc_nas/15013/l_openvino_toolkit_p_2018.5.445.tgz \
+#RUN curl http://registrationcenter-download.intel.com/akdlm/irc_nas/15013/l_openvino_toolkit_p_2018.5.445.tgz \
+RUN curl http://registrationcenter-download.intel.com/akdlm/irc_nas/15078/l_openvino_toolkit_p_2018.5.455.tgz \
     --output openvino.tgz
 RUN tar xzf openvino.tgz
 ARG INSTALL_DIR=/opt/intel/computer_vision_sdk

@@ -59,6 +59,7 @@ private:
 
     std::string validateNetwork(CNNNetReader &reader);
     std::string findPluginPath();
+    void loadPlugin(std::string &app_path, std::string &device);
 
 public:
     ObjectDetection(std::string &app_path, std::string &device);

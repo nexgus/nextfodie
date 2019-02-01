@@ -52,7 +52,7 @@ DEFINE_string(H, "localhost", host_message);
 DEFINE_int32 (p, 30303,       port_message);
 DEFINE_string(d, "CPU",       device_message);
 DEFINE_string(m, "",          model_message);
-DEFINE_double(t, 0.7,         threshold_message);
+DEFINE_double(t, 0.5,         threshold_message);
 
 static void show_usage() {
     std::cout << std::endl;

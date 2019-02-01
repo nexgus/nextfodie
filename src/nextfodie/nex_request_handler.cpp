@@ -62,6 +62,7 @@ void handle_get(http_request request) {
         std::ostringstream stream;
         stream << "Path not found (" << path << ")";
         jsn["error"] = json::value::string(stream.str());
+        std::cout << stream.str() << std::endl;
     }
     else {
         auto queries = http::uri::split_query(query);
@@ -69,11 +70,13 @@ void handle_get(http_request request) {
         if ((possible_query_count < 1) || (possible_query_count > 3)) {
             status = status_codes::BadRequest;
             jsn["error"] = json::value::string("Bad Request (invalid query count)");
+            std::cout << "Bad Request (invalid query count)" << std::endl;
         }
         else {
             if (queries.find("path") == queries.end()) {
                 status = status_codes::BadRequest;
                 jsn["error"] = json::value::string("Bad Request (cannot find path)");
+                std::cout << "Bad Request (cannot find path)" << std::endl;
             }
             else {
                 std::string::size_type sz;
@@ -85,6 +88,9 @@ void handle_get(http_request request) {
                 if ((possible_query_count > 0) && (queries.find("threshold") != queries.end())) {
                     threshold = stof(queries["threshold"], &sz);
                     possible_query_count--;
+                    if ((threshold < 0) || (threshold > 1)) {
+                        threshold = -1;
+                    }
                 }
                 if ((possible_query_count > 0) && (queries.find("abs") != queries.end())) {
                     if (queries["abs"] == "true") {
@@ -96,6 +102,7 @@ void handle_get(http_request request) {
                 if (possible_query_count > 0) {
                     status = status_codes::BadRequest;
                     jsn["error"] = json::value::string("Bad Request (unknown query)");
+                    std::cout << "Bad Request (unknown query)" << std::endl;
                 }
                 else {
                     std::cout << "Inference request (image: " << imgpath << "; threshold: " << threshold 
@@ -126,6 +133,7 @@ void handle_get(http_request request) {
 }
 
 void handle_post(http_request request) {
+    auto t0 = std::chrono::high_resolution_clock::now();
     http::status_code status = status_codes::OK;
     json::value jsn;
     auto uri = request.relative_uri();
@@ -138,6 +146,7 @@ void handle_post(http_request request) {
         std::ostringstream stream;
         stream << "Path not found (" << path << ")";
         jsn["error"] = json::value::string(stream.str());
+        std::cout << stream.str() << std::endl;
     }
     else {
         http_headers headers = request.headers();
@@ -179,6 +188,9 @@ void handle_post(http_request request) {
                     }
                     else if ((it->first == "threshold") && (fields[it->first]->GetType() == MPFD::Field::TextType)) {
                         threshold = std::stod(fields[it->first]->GetTextTypeContent());
+                        if ((threshold > 1) || (threshold < 0)) {
+                            threshold = -1;
+                        }
                     }
                     else if ((it->first == "abs") && (fields[it->first]->GetType() == MPFD::Field::TextType)) {
                         auto temp = fields[it->first]->GetTextTypeContent();
@@ -193,6 +205,7 @@ void handle_post(http_request request) {
                     else {
                         status = status_codes::BadRequest;
                         jsn["error"] = json::value::string("Invalid parameter");
+                        std::cout << "Invalid parameter" << std::endl;
                         break;
                     }
                 }
@@ -201,49 +214,54 @@ void handle_post(http_request request) {
                     if (img == NULL || img_size == 0) {
                         status = status_codes::BadRequest;
                         jsn["error"] = json::value::string("Cannot find image");
+                        std::cout << "Cannot find image" << std::endl;
                     }
                     else {
                         std::cout << "Inference request (image size: " << img_size << "; threshold: " << threshold 
                                   << "; normalized: " << !abs << ")" << std::endl;
 
                         std::cout << "Infering..." << std::flush;
-                        auto t0 = std::chrono::high_resolution_clock::now();
-                        auto cvimg = ie->openImage(img, (size_t)img_size);
                         auto t1 = std::chrono::high_resolution_clock::now();
-                        auto inference = ie->infer(cvimg);
+                        auto cvimg = ie->openImage(img, (size_t)img_size);
                         auto t2 = std::chrono::high_resolution_clock::now();
-                        jsn = ie->parse(inference, !abs, threshold);
+                        auto inference = ie->infer(cvimg);
                         auto t3 = std::chrono::high_resolution_clock::now();
+                        jsn = ie->parse(inference, !abs, threshold);
+                        auto t4 = std::chrono::high_resolution_clock::now();
                         status = status_codes::OK;
 
-                        ms t_load  = std::chrono::duration_cast<ms>(t1 - t0);
-                        ms t_infer = std::chrono::duration_cast<ms>(t2 - t1);
-                        ms t_parse = std::chrono::duration_cast<ms>(t3 - t2);
-                        ms t_total = std::chrono::duration_cast<ms>(t3 - t0);
-                        std::cout << " done (load: " << t_load.count() << "mS; infer: " << t_infer.count() 
-                                  << "mS; parse: " << t_parse.count() << "mS; total: " << t_total.count() 
-                                  << "mS)" << std::endl;
+                        ms t_rx    = std::chrono::duration_cast<ms>(t1 - t0);
+                        ms t_load  = std::chrono::duration_cast<ms>(t2 - t1);
+                        ms t_infer = std::chrono::duration_cast<ms>(t3 - t2);
+                        ms t_parse = std::chrono::duration_cast<ms>(t4 - t3);
+                        ms t_total = std::chrono::duration_cast<ms>(t4 - t0);
+                        std::cout << " done (rx: " << t_rx.count() << "mS); load: " << t_load.count() << "mS; infer: " << t_infer.count() 
+                                  << "mS; parse: " << t_parse.count() << "mS; total: " << t_total.count() << "mS)" << std::endl;
                     }
                 }
             }
             catch (MPFD::Exception ex) {
                 status = status_codes::BadRequest;
                 jsn["error"] = json::value::string(ex.GetError());
+                std::cout << " " << ex.GetError() << std::endl;
             }
             catch (std::exception const &ex) {
                 status = status_codes::InternalError;
                 jsn["error"] = json::value::string(ex.what());
+                std::cout << " " << ex.what() << std::endl;
             }
         }
         else {
             status = status_codes::BadRequest;
             jsn["error"] = json::value::string("Invalid header (cannot find content-type)");
+            std::cout << "Invalid header (cannot find content-type)" << std::endl;
         }
     }
     request.reply(status, jsn);
 }
 
 void handle_put(http_request request) {
+    auto t0 = std::chrono::high_resolution_clock::now();
     http::status_code status = status_codes::OK;
     json::value jsn;
     auto uri = request.relative_uri();
@@ -256,6 +274,7 @@ void handle_put(http_request request) {
         std::ostringstream stream;
         stream << "Path not found (" << path << ")";
         jsn["error"] = json::value::string(stream.str());
+        std::cout << stream.str() << std::endl;
     }
     else {
         char *labelmap = NULL, *model_xml = NULL, *model_bin = NULL;
@@ -301,6 +320,7 @@ void handle_put(http_request request) {
                         std::ostringstream stream;
                         stream << "Invalid parameter/type (" << it->first << ")";
                         jsn["error"] = json::value::string(stream.str());
+                        std::cout << "Invalid parameter/type (" << it->first << ")" << std::endl;
                         break;
                     }
                 }
@@ -309,6 +329,7 @@ void handle_put(http_request request) {
                     std::ostringstream stream;
                     stream << "Invalid parameter/type (" << it->first << ")";
                     jsn["error"] = json::value::string(stream.str());
+                    std::cout << "Invalid parameter/type (" << it->first << ")" << std::endl;
                     break;
                 }
             }
@@ -318,11 +339,12 @@ void handle_put(http_request request) {
                     if (model_xml == NULL || xml_size == 0 || model_bin == NULL || bin_size == 0) {
                         status = status_codes::BadRequest;
                         jsn["error"] = json::value::string("Cannot find model");
+                        std::cout << "Cannot find model" << std::endl;
                     }
                     else {
                         std::cout << "Load model request (xml: " << xml_size << "; bin: " << bin_size << ")" << std::endl;
 
-                        auto t0 = std::chrono::high_resolution_clock::now();
+                        auto t1 = std::chrono::high_resolution_clock::now();
 
                         // Since OpenVINO cannot load model by file pointer or buffer, so we have to save it as a file
                         std::cout << "Loading..." << std::flush;
@@ -342,9 +364,12 @@ void handle_put(http_request request) {
                         remove(filename_xml.c_str());
                         remove(filename_bin.c_str());
 
-                        auto t1 = std::chrono::high_resolution_clock::now();
-                        ms t = std::chrono::duration_cast<ms>(t1 - t0);
-                        std::cout << " done (" << t.count() << "mS)" << std::endl;
+                        auto t2 = std::chrono::high_resolution_clock::now();
+                        ms t_rx    = std::chrono::duration_cast<ms>(t1 - t0);
+                        ms t_load  = std::chrono::duration_cast<ms>(t2 - t1);
+                        ms t_total = std::chrono::duration_cast<ms>(t2 - t0);
+                        std::cout << " done (rx: " << t_rx.count() << "mS; load: " << t_load.count() 
+                                  << "mS; total: " << t_total.count() << "mS)" << std::endl;
 
                         status = status_codes::OK;
                         jsn["xml"] = json::value::number(xml_size);
@@ -355,6 +380,7 @@ void handle_put(http_request request) {
                     if (labelmap == NULL || labelmap_size == 0) {
                         status = status_codes::BadRequest;
                         jsn["error"] = json::value::string("Cannot find labelmap");
+                        std::cout << "Cannot find labelmap" << std::endl;
                     }
                     else {
                         std::cout << "Load labelmap" << std::endl;
@@ -368,10 +394,12 @@ void handle_put(http_request request) {
         catch (MPFD::Exception ex) {
             status = status_codes::BadRequest;
             jsn["error"] = json::value::string(ex.GetError());
+            std::cout << " " << ex.GetError() << std::endl;
         }
         catch (std::exception const &ex) {
             status = status_codes::InternalError;
             jsn["error"] = json::value::string(ex.what());
+            std::cout << " " << ex.what() << std::endl;
         }
     }
     request.reply(status, jsn);

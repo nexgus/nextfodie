@@ -23,12 +23,11 @@
  *
  *******************************************************************************
  */
-#include <cstdlib>          // std::getenv
+#include <cstdlib>
 #include <memory>
 #include <stdexcept>
-//#include <sys/utsname.h>
 
-#include <ext_list.hpp>     // InferenceEngine::Extensions::Cpu::CpuExtensions
+#include <ext_list.hpp>
 
 #include "nex_inference_engine.h"
 
@@ -47,13 +46,7 @@ void display_intel_ie_version() {
 }
 
 ObjectDetection::ObjectDetection(std::string &app_path, std::string &device) {
-    this->plugin = PluginDispatcher({this->findPluginPath(), ""}).getPluginByDevice(device);
-    if (device.find("CPU") != std::string::npos) {
-        auto ext_path = app_path + "lib/libcpu_extension.so";
-        IExtensionPtr extension_ptr = make_so_pointer<IExtension>(ext_path);
-        this->plugin.AddExtension(extension_ptr);
-    }
-
+    this->loadPlugin(app_path, device);
     this->input_w  = 0;
     this->input_h  = 0;
     this->input_ch = 0;
@@ -61,21 +54,24 @@ ObjectDetection::ObjectDetection(std::string &app_path, std::string &device) {
 }
 
 ObjectDetection::ObjectDetection(std::string &app_path, std::string &device, std::string &model_xml, float threshold) {
-    this->plugin = PluginDispatcher({this->findPluginPath(), ""}).getPluginByDevice(device);
-    if (device.find("CPU") != std::string::npos) {
-        auto ext_path = app_path + "lib/libcpu_extension.so";
-        IExtensionPtr extension_ptr = make_so_pointer<IExtension>(ext_path);
-        this->plugin.AddExtension(extension_ptr);
-    }
-
     std::string model_bin = model_bin_filename(model_xml);
+    this->loadPlugin(app_path, device);
     this->loadModel(model_xml, model_bin);
     this->setThreshold(threshold);
 }
 
+void ObjectDetection::loadPlugin(std::string &app_path, std::string &device) {
+    this->plugin = PluginDispatcher({this->findPluginPath(), ""}).getPluginByDevice(device);
+    if (device.find("CPU") != std::string::npos) {
+        auto ext_path = app_path + "/lib/libcpu_extension.so";
+        IExtensionPtr extension_ptr = make_so_pointer<IExtension>(ext_path);
+        this->plugin.AddExtension(extension_ptr);
+    }
+}
+
 std::string ObjectDetection::findPluginPath() {
     std::string intel_cvsdk_dir = std::string(std::getenv("INTEL_CVSDK_DIR"));
-    std::string plugin_path = intel_cvsdk_dir + "deployment_tools/inference_engine/lib/intel64";
+    std::string plugin_path = intel_cvsdk_dir + "/deployment_tools/inference_engine/lib/intel64";
     return plugin_path;
 }
 
