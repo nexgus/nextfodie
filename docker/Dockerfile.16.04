@@ -12,7 +12,8 @@ RUN apt-get install -y --no-install-recommends \
    python3-pip \
    python3-setuptools \
    sudo \
-   libcpprest-dev
+   libcpprest-dev \
+   ocl-icd-opencl-dev
 RUN mkdir /app
 WORKDIR /app
 #RUN curl http://registrationcenter-download.intel.com/akdlm/irc_nas/15013/l_openvino_toolkit_p_2018.5.445.tgz \
