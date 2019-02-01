@@ -1,4 +1,5 @@
 FROM ubuntu:16.04
+INSTALL_DIR=/opt/intel/computer_vision_sdk
 RUN apt-get update && apt-get -y upgrade && apt-get autoremove
 RUN apt-get install -y --no-install-recommends \
    build-essential \
@@ -12,24 +13,21 @@ RUN apt-get install -y --no-install-recommends \
    python3-pip \
    python3-setuptools \
    sudo \
-   libcpprest-dev \
-   ocl-icd-opencl-dev
-RUN mkdir /app
-WORKDIR /app
-#RUN curl http://registrationcenter-download.intel.com/akdlm/irc_nas/15013/l_openvino_toolkit_p_2018.5.445.tgz \
-RUN curl http://registrationcenter-download.intel.com/akdlm/irc_nas/15078/l_openvino_toolkit_p_2018.5.455.tgz \
-    --output openvino.tgz
-RUN tar xzf openvino.tgz
-ARG INSTALL_DIR=/opt/intel/computer_vision_sdk
+   libcpprest-dev
+RUN mkdir /app && cd /app && /
+    curl http://registrationcenter-download.intel.com/akdlm/irc_nas/15078/l_openvino_toolkit_p_2018.5.455.tgz \
+    --output openvino.tgz && \
+    tar xzf openvino.tgz
 # installing OpenVINO dependencies
+INSTALL_DIR=/opt/intel/computer_vision_sdk
 RUN cd /app/l_openvino_toolkit* && \
     ./install_cv_sdk_dependencies.sh
 RUN cd /app/l_openvino_toolkit* && \
     sed -i 's/decline/accept/g' silent.cfg && \
-    ./install.sh --silent silent.cfg
+    ./install.sh --silent silent.cfg && \
+    rm -r /app
 RUN /bin/bash -c "source $INSTALL_DIR/bin/setupvars.sh"
 RUN echo "source $INSTALL_DIR/bin/setupvars.sh" >> /root/.bashrc
+RUN cd /opt/intel/computer_vision_sdk/install_dependencies && bash install_NEO_OCL_driver.sh
 WORKDIR /root
-RUN git clone https://github.com/nexgus/nextfodie.git
-RUN rm -r /app
 CMD ["/bin/bash"]

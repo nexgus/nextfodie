@@ -235,7 +235,7 @@ void handle_post(http_request request) {
                         ms t_infer = std::chrono::duration_cast<ms>(t3 - t2);
                         ms t_parse = std::chrono::duration_cast<ms>(t4 - t3);
                         ms t_total = std::chrono::duration_cast<ms>(t4 - t0);
-                        std::cout << " done (rx: " << t_rx.count() << "mS); load: " << t_load.count() << "mS; infer: " << t_infer.count() 
+                        std::cout << " done (rx: " << t_rx.count() << "mS; load: " << t_load.count() << "mS; infer: " << t_infer.count() 
                                   << "mS; parse: " << t_parse.count() << "mS; total: " << t_total.count() << "mS)" << std::endl;
                     }
                 }

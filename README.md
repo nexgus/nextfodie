@@ -2,6 +2,7 @@
 
 ## Introduction
 This is a RESTful API server using [Microsoft C++ REST SDK](https://github.com/Microsoft/cpprestsdk) and [MPFDParser](http://grigory.info/MPFDParser.About.html) to perform inference based on [Intel OpenVINO 2018 R5](https://software.intel.com/en-us/openvino-toolkit/choose-download/free-download-linux). The model is trained by TensorFlow Object Detection API, then use Model Optimizer of OpenVINO to convert to IR format.
+The default port number is `30303`.
 
 ## API
 ```
@@ -64,7 +65,7 @@ Run `nextfodie` with GPU, do not load model, listen to anyone
 $ ./nextfodie -d GPU -H 0.0.0.0
 Listen to http://0.0.0.0:30303
 ```
-Now you may use any RESTful API tool such as [Postman](https://www.getpostman.com/) or `curl` to load model. The response should be like this
+Now you may use any RESTful API tool such as [Postman](https://www.getpostman.com/) or [`curl`](https://curl.haxx.se/) to load model. The response should be like this
 ```
 ---------- PUT /model
 Load model request (xml: 173209; bin: 94699118)
@@ -90,4 +91,13 @@ $ cd ~/nextfodie/docker
 $ docker build -t nextfodie:18.04 -f Dockerfile.18.04 .
 $ cd ~
 $ docker run --rm -it -v $(pwd)/nextfodie:/root/nextfodie -p 30303:30303 nextfodie:18.04
+```
+
+## Run `nextfodie` with GPU in Docker
+You have to give "mapping" `/dev/dri` into container. For example,
+``` bash
+$ cd ~/nextfodie/docker
+$ docker build -t nextfodie:18.04 -f Dockerfile.18.04 .
+$ cd ~
+$ docker run --rm -it --device /dev/dri -v $(pwd)/nextfodie:/root/nextfodie -p 30303:30303 nextfodie:18.04
 ```
