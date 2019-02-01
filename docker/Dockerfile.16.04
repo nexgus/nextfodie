@@ -1,5 +1,4 @@
 FROM ubuntu:16.04
-INSTALL_DIR=/opt/intel/computer_vision_sdk
 RUN apt-get update && apt-get -y upgrade && apt-get autoremove
 RUN apt-get install -y --no-install-recommends \
    build-essential \
@@ -14,12 +13,12 @@ RUN apt-get install -y --no-install-recommends \
    python3-setuptools \
    sudo \
    libcpprest-dev
-RUN mkdir /app && cd /app && /
+RUN mkdir /app && cd /app && \
     curl http://registrationcenter-download.intel.com/akdlm/irc_nas/15078/l_openvino_toolkit_p_2018.5.455.tgz \
     --output openvino.tgz && \
     tar xzf openvino.tgz
 # installing OpenVINO dependencies
-INSTALL_DIR=/opt/intel/computer_vision_sdk
+ARG INSTALL_DIR=/opt/intel/computer_vision_sdk
 RUN cd /app/l_openvino_toolkit* && \
     ./install_cv_sdk_dependencies.sh
 RUN cd /app/l_openvino_toolkit* && \
