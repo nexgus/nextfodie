@@ -94,10 +94,7 @@ $ docker run --rm -it -v $(pwd)/nextfodie:/root/nextfodie -p 30303:30303 nextfod
 ```
 
 ## Run `nextfodie` with GPU in Docker
-You have to give "mapping" `/dev/dri` into container. For example,
+You have to add device `/dev/dri` into container. For example,
 ``` bash
-$ cd ~/nextfodie/docker
-$ docker build -t nextfodie:18.04 -f Dockerfile.18.04 .
-$ cd ~
 $ docker run --rm -it --device /dev/dri -v $(pwd)/nextfodie:/root/nextfodie -p 30303:30303 nextfodie:18.04
 ```
